@@ -34,6 +34,40 @@ public class Stage {
     itemLists = new HashMap<String,List<Item>>();
   }
 
+  public void initial(){
+    for(Actor a: actors) {
+      Thread actorInitial = new Thread(() -> {
+          if(a.isBot()) {
+            while(true){
+              try {
+                Surface currLoc = (Surface) a.getLocation();
+                if(a.turns > currLoc.cost / a.speed) {
+                  a.turns = 0;
+                  List<Cell> possibleLocs = getClearRadius(a.getLocation(), 1);
+                  Cell nextLoc = a.strat.chooseNextLoc(possibleLocs, player, actors);
+                  a.setLocation(nextLoc);
+                } else {
+                  a.turns++;
+                }
+              } catch(ClassCastException e) {
+                // Should never occur as players cannot move onto boundary cells.
+                System.err.println("Fatal error: " + e);
+                System.exit(1);
+              }
+              if(a.getLocation() == player.getLocation()) {
+                player.damage +=  a.damage;
+              }
+              try{
+                Thread.sleep(15);
+              } catch(InterruptedException e){}
+            }
+          }
+      });
+      actorInitial.start();
+    }
+
+  }
+
   public void update() {
     int worldX = player.getLocation().col;
     int worldY = player.getLocation().row;
@@ -65,28 +99,9 @@ public class Stage {
     grid.screenX = player.getLocation().col - Grid.visibleCols/2;
     grid.screenY = player.getLocation().row - Grid.visibleRows/2;
     // do we have AI moves to make?
-    for(Actor a: actors) {
-      if(a.isBot()) {
-        try {
-          Surface currLoc = (Surface) a.getLocation();
-          if(a.turns > currLoc.cost / a.speed) {
-            a.turns = 0;
-            List<Cell> possibleLocs = getClearRadius(a.getLocation(), 1);
-            Cell nextLoc = a.strat.chooseNextLoc(possibleLocs, player, actors);
-            a.setLocation(nextLoc);
-          } else {
-            a.turns++;
-          }
-        } catch(ClassCastException e) {
-          // Should never occur as players cannot move onto boundary cells.
-          System.err.println("Fatal error: " + e);
-          System.exit(1);
-        }
-        if(a.getLocation() == player.getLocation()) {
-          player.damage +=  a.damage;
-        }
-      }
-    }
+    
+
+
     // Tabulate type and count of enemies
     if(chaseLists.isEmpty() || escapeLists.isEmpty()) {
       chaseLists = new HashMap<String,List<Actor>>();

@@ -98,7 +98,6 @@ public class Main extends JFrame {
       }
     });
     paintThread.start();
-
     Instant startUpdate;
     Instant endUpdate;
     long updateDuration;
@@ -109,6 +108,7 @@ public class Main extends JFrame {
         String stagefile = "data/stage" + Integer.toString(canvas.stageno) + ".map";
         canvas.stage = StageReader.buildStage(stagefile);
         canvas.stage.cleared = false;
+        canvas.stage.initial();
       }
       // Check user input every 15ms
       startUpdate = Instant.now();
